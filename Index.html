@@ -1,15 +1,69 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Projet Statistique</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lettre d'Amour Stellaire ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>📊 Statistiques en direct</h1>
-  <canvas id="monGraphique" width="400" height="200"></canvas>
+    <!-- Background Stars -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- Floating Hearts -->
+    <div class="floating-hearts" id="hearts"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
+    <div class="container">
+        <header>
+            <h1>Lettre d'Amour Stellaire</h1>
+            <div class="subtitle">Chaque étoile dans le ciel est un battement de mon cœur pour toi</div>
+        </header>
+
+        <div class="main-content">
+            <div class="letter-container">
+                <div class="letter-header">
+                    <div class="name-display" id="nameDisplay">Ma Chérie</div>
+                    <div class="date" id="currentDate"></div>
+                </div>
+                
+                <div class="letter-content">
+                    <p>Quand je pense à toi, mon cœur s'emballe comme une pluie d'étoiles filantes dans la nuit. Tu es la lumière qui guide mes pas, la constellation qui illumine mes nuits les plus sombres.</p>
+                    
+                    <p>Chaque moment à tes côtés est comme une étoile qui brille dans le ciel de ma vie. Je me souviens de notre première rencontre comme si c'était hier - ce moment magique où nos regards se sont croisés et où j'ai su que ma vie venait de basculer dans le bon sens.</p>
+                    
+                    <p>Ton sourire est mon soleil, ta voix ma mélodie préférée, et ton rire la plus douce des musiques. Tu es la personne la plus incroyable que j'aie jamais rencontrée, et chaque jour à tes côtés est un cadeau précieux.</p>
+                    
+                    <p>Je t'écris ces mots non pas parce que je dois le faire, mais parce que mon cœur déborde d'amour pour toi et que je veux que tu saches à quel point tu es spéciale pour moi. Tu es mon étoile polaire, mon point fixe dans un univers en mouvement.</p>
+                </div>
+                
+                <div class="signature">Pour toujours,<br>Ton Amoureux</div>
+            </div>
+            
+            <div class="interactive-section">
+                <div class="stars-container">
+                    <div class="stars-title">Écris un message dans les étoiles</div>
+                    <div class="instructions">Tape sur le clavier pour créer des étoiles filantes</div>
+                    <canvas id="starCanvas"></canvas>
+                    <div class="instructions">Ou clique sur le ciel pour créer des constellations</div>
+                </div>
+                
+                <div class="special-message">
+                    <div class="stars-title">Un message spécial pour toi</div>
+                    <button class="heart-btn" id="heartButton">
+                        <i class="fas fa-heart"></i> Clique ici mon amour
+                    </button>
+                    <div class="hidden-message" id="hiddenMessage"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            Créé avec tout mon amour • Chaque étoile représente un de mes sentiments pour toi
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
