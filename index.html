@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculateur de masse moléculaire pour les lycéens en Terminale D">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Moleculator Inc- Calculateur de masse moléculaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* Custom CSS for elements that need more precise styling */
+        .element-card {
+            transition: all 0.2s ease;
+        }
+        .element-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .formula-input {
+            font-family: 'Courier New', monospace;
+        }
+        .explanation-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .explanation-content.show {
+            max-height: 1000px;
+        }
+        @media (max-width: 640px) {
+            .mobile-stack {
+                flex-direction: column;
+            }
+            .mobile-stack > * {
+                width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-atom text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold">Moleculator Inc</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><button id="nightModeToggle" class="p-2 rounded-full hover:bg-blue-700 transition" title="Mode nuit">
+                        <i class="fas fa-moon"></i>
+                    </button></li>
+                    <li><button id="infoBtn" class="p-2 rounded-full hover:bg-blue-700 transition" title="À propos">
+                        <i class="fas fa-info-circle"></i>
+                    </button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Hero Section -->
+            <section class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-blue-700 mb-4">Calculateur de masse moléculaire</h2>
+                <p class="text-lg text-gray-600 mb-6">Entrez une formule chimique (ex: H2O, NaCl, C6H12O6) pour calculer sa masse moléculaire et obtenir une explication détaillée.</p>
+                
+                <!-- Formula Input -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <div class="flex mobile-stack">
+                        <input type="text" id="formulaInput" 
+                               class="formula-input flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="H2O, NaCl, C6H12O6..." autocomplete="off" autocapitalize="off">
+                        <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-r-lg transition">
+                            Calculer <i class="fas fa-calculator ml-2"></i>
+                        </button>
+                    </div>
+                    <p id="inputError" class="text-red-500 mt-2 text-sm hidden"></p>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="hidden bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">Résultats</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- Formula Card -->
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                        <h4 class="font-medium text-blue-800 mb-2">Formule</h4>
+                        <p id="formulaDisplay" class="text-2xl font-mono font-bold text-blue-600">-</p>
+                    </div>
+                    
+                    <!-- Molar Mass Card -->
+                    <div class="bg-green-50 border border-green-100 rounded-lg p-4">
+                        <h4 class="font-medium text-green-800 mb-2">Masse molaire</h4>
+                        <p id="molarMassDisplay" class="text-2xl font-bold text-green-600">-</p>
+                    </div>
+                    
+                    <!-- Unit Card -->
+                    <div class="bg-purple-50 border border-purple-100 rounded-lg p-4">
+                        <h4 class="font-medium text-purple-800 mb-2">Unité</h4>
+                        <p class="text-2xl font-bold text-purple-600">g/mol</p>
+                    </div>
+                </div>
+                
+                <!-- Calculation Steps -->
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-700 mb-3">Détails du calcul</h4>
+                    <div id="calculationSteps" class="space-y-3">
+                        <!-- Steps will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Detailed Explanation -->
+                <div class="border-t border-gray-200 pt-4">
+                    <button id="explanationToggle" class="flex items-center justify-between w-full text-left font-semibold text-blue-700 hover:text-blue-800 mb-2">
+                        <span>Explication détaillée</span>
+                        <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                    </button>
+                    <div id="explanationContent" class="explanation-content">
+                        <div id="detailedExplanation" class="prose max-w-none text-gray-700">
+                            <!-- Explanation will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Elements Table -->
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-semibold text-blue-700 mb-4">Masses atomiques des éléments</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbole</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Masse atomique (g/mol)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="elementsTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Elements will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-600">
+            <p>© 2025 Moleculator Inc- Calculateur de masse moléculaire pour les lycéens et élèves en terminale D&C</p>
+            <p class="text-sm mt-2">Données atomiques issues des valeurs IUPAC 2021</p>
+        </div>
+    </footer>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-blue-700">À propos de Moleculator Inc</h3>
+                    <button id="closeInfoModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="prose">
+                    <p>Moleculator Inc est un outil pédagogique conçu par Hino Coding Lab (HCL) pour aider les élèves de Terminale D & C à comprendre et calculer les masses moléculaires.</p>
+                    <p class="mt-2"><strong>Fonctionnalités :</strong></p>
+                    <ul class="list-disc pl-5">
+                        <li>Calcul précis des masses moléculaires</li>
+                        <li>Explications détaillées étape par étape</li>
+                        <li>Accès hors ligne (PWA) bientôt</li>
+                        <li>Base de données fiable des éléments</li>
+                    </ul>
+                    <p class="mt-2"><strong>Comment utiliser :</strong></p>
+                    <ol class="list-decimal pl-5">
+                        <li>Entrez une formule chimique (ex: H2O, NaCl)</li>
+                        <li>Cliquez sur "Calculer"</li>
+                        <li>Consultez le résultat et l'explication</li>
+                    </ol>
+                    <p class="mt-4 text-sm text-gray-500">Version 1.0.0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elements database (normally this would be in elements.json)
+        const elements = [
+            { symbol: "H", name: "Hydrogène", atomicMass: 1.008 },
+            { symbol: "He", name: "Hélium", atomicMass: 4.0026 },
+            { symbol: "Li", name: "Lithium", atomicMass: 6.94 },
+            { symbol: "Be", name: "Béryllium", atomicMass: 9.0122 },
+            { symbol: "B", name: "Bore", atomicMass: 10.81 },
+            { symbol: "C", name: "Carbone", atomicMass: 12.011 },
+            { symbol: "N", name: "Azote", atomicMass: 14.007 },
+            { symbol: "O", name: "Oxygène", atomicMass: 15.999 },
+            { symbol: "F", name: "Fluor", atomicMass: 18.998 },
+            { symbol: "Ne", name: "Néon", atomicMass: 20.180 },
+            { symbol: "Na", name: "Sodium", atomicMass: 22.990 },
+            { symbol: "Mg", name: "Magnésium", atomicMass: 24.305 },
+            { symbol: "Al", name: "Aluminium", atomicMass: 26.982 },
+            { symbol: "Si", name: "Silicium", atomicMass: 28.085 },
+            { symbol: "P", name: "Phosphore", atomicMass: 30.974 },
+            { symbol: "S", name: "Soufre", atomicMass: 32.06 },
+            { symbol: "Cl", name: "Chlore", atomicMass: 35.45 },
+            { symbol: "Ar", name: "Argon", atomicMass: 39.948 },
+            { symbol: "K", name: "Potassium", atomicMass: 39.098 },
+            { symbol: "Ca", name: "Calcium", atomicMass: 40.078 },
+            { symbol: "Sc", name: "Scandium", atomicMass: 44.956 },
+            { symbol: "Ti", name: "Titane", atomicMass: 47.867 },
+            { symbol: "V", name: "Vanadium", atomicMass: 50.942 },
+            { symbol: "Cr", name: "Chrome", atomicMass: 51.996 },
+            { symbol: "Mn", name: "Manganèse", atomicMass: 54.938 },
+            { symbol: "Fe", name: "Fer", atomicMass: 55.845 },
+            { symbol: "Co", name: "Cobalt", atomicMass: 58.933 },
+            { symbol: "Ni", name: "Nickel", atomicMass: 58.693 },
+            { symbol: "Cu", name: "Cuivre", atomicMass: 63.546 },
+            { symbol: "Zn", name: "Zinc", atomicMass: 65.38 },
+            { symbol: "Ga", name: "Gallium", atomicMass: 69.723 },
+            { symbol: "Ge", name: "Germanium", atomicMass: 72.630 },
+            { symbol: "As", name: "Arsenic", atomicMass: 74.922 },
+            { symbol: "Se", name: "Sélénium", atomicMass: 78.971 },
+            { symbol: "Br", name: "Brome", atomicMass: 79.904 },
+            { symbol: "Kr", name: "Krypton", atomicMass: 83.798 },
+            { symbol: "Rb", name: "Rubidium", atomicMass: 85.468 },
+            { symbol: "Sr", name: "Strontium", atomicMass: 87.62 },
+            { symbol: "Y", name: "Yttrium", atomicMass: 88.906 },
+            { symbol: "Zr", name: "Zirconium", atomicMass: 91.224 },
+            { symbol: "Nb", name: "Niobium", atomicMass: 92.906 },
+            { symbol: "Mo", name: "Molybdène", atomicMass: 95.95 },
+            { symbol: "Tc", name: "Technétium", atomicMass: 98 },
+            { symbol: "Ru", name: "Ruthénium", atomicMass: 101.07 },
+            { symbol: "Rh", name: "Rhodium", atomicMass: 102.91 },
+            { symbol: "Pd", name: "Palladium", atomicMass: 106.42 },
+            { symbol: "Ag", name: "Argent", atomicMass: 107.87 },
+            { symbol: "Cd", name: "Cadmium", atomicMass: 112.41 },
+            { symbol: "In", name: "Indium", atomicMass: 114.82 },
+            { symbol: "Sn", name: "Étain", atomicMass: 118.71 },
+            { symbol: "Sb", name: "Antimoine", atomicMass: 121.76 },
+            { symbol: "Te", name: "Tellure", atomicMass: 127.60 },
+            { symbol: "I", name: "Iode", atomicMass: 126.90 },
+            { symbol: "Xe", name: "Xénon", atomicMass: 131.29 },
+            { symbol: "Cs", name: "Césium", atomicMass: 132.91 },
+            { symbol: "Ba", name: "Baryum", atomicMass: 137.33 },
+            { symbol: "La", name: "Lanthane", atomicMass: 138.91 },
+            { symbol: "Ce", name: "Cérium", atomicMass: 140.12 },
+            { symbol: "Pr", name: "Praséodyme", atomicMass: 140.91 },
+            { symbol: "Nd", name: "Néodyme", atomicMass: 144.24 },
+            { symbol: "Pm", name: "Prométhium", atomicMass: 145 },
+            { symbol: "Sm", name: "Samarium", atomicMass: 150.36 },
+            { symbol: "Eu", name: "Europium", atomicMass: 151.96 },
+            { symbol: "Gd", name: "Gadolinium", atomicMass: 157.25 },
+            { symbol: "Tb", name: "Terbium", atomicMass: 158.93 },
+            { symbol: "Dy", name: "Dysprosium", atomicMass: 162.50 },
+            { symbol: "Ho", name: "Holmium", atomicMass: 164.93 },
+            { symbol: "Er", name: "Erbium", atomicMass: 167.26 },
+            { symbol: "Tm", name: "Thulium", atomicMass: 168.93 },
+            { symbol: "Yb", name: "Ytterbium", atomicMass: 173.05 },
+            { symbol: "Lu", name: "Lutécium", atomicMass: 174.97 },
+            { symbol: "Hf", name: "Hafnium", atomicMass: 178.49 },
+            { symbol: "Ta", name: "Tantale", atomicMass: 180.95 },
+            { symbol: "W", name: "Tungstène", atomicMass: 183.84 },
+            { symbol: "Re", name: "Rhénium", atomicMass: 186.21 },
+            { symbol: "Os", name: "Osmium", atomicMass: 190.23 },
+            { symbol: "Ir", name: "Iridium", atomicMass: 192.22 },
+            { symbol: "Pt", name: "Platine", atomicMass: 195.08 },
+            { symbol: "Au", name: "Or", atomicMass: 196.97 },
+            { symbol: "Hg", name: "Mercure", atomicMass: 200.59 },
+            { symbol: "Tl", name: "Thallium", atomicMass: 204.38 },
+            { symbol: "Pb", name: "Plomb", atomicMass: 207.2 },
+            { symbol: "Bi", name: "Bismuth", atomicMass: 208.98 },
+            { symbol: "Po", name: "Polonium", atomicMass: 209 },
+            { symbol: "At", name: "Astate", atomicMass: 210 },
+            { symbol: "Rn", name: "Radon", atomicMass: 222 },
+            { symbol: "Fr", name: "Francium", atomicMass: 223 },
+            { symbol: "Ra", name: "Radium", atomicMass: 226 },
+            { symbol: "Ac", name: "Actinium", atomicMass: 227 },
+            { symbol: "Th", name: "Thorium", atomicMass: 232.04 },
+            { symbol: "Pa", name: "Protactinium", atomicMass: 231.04 },
+            { symbol: "U", name: "Uranium", atomicMass: 238.03 },
+            { symbol: "Np", name: "Neptunium", atomicMass: 237 },
+            { symbol: "Pu", name: "Plutonium", atomicMass: 244 },
+            { symbol: "Am", name: "Américium", atomicMass: 243 },
+            { symbol: "Cm", name: "Curium", atomicMass: 247 },
+            { symbol: "Bk", name: "Berkélium", atomicMass: 247 },
+            { symbol: "Cf", name: "Californium", atomicMass: 251 },
+            { symbol: "Es", name: "Einsteinium", atomicMass: 252 },
+            { symbol: "Fm", name: "Fermium", atomicMass: 257 },
+            { symbol: "Md", name: "Mendélévium", atomicMass: 258 },
+            { symbol: "No", name: "Nobélium", atomicMass: 259 },
+            { symbol: "Lr", name: "Lawrencium", atomicMass: 262 },
+            { symbol: "Rf", name: "Rutherfordium", atomicMass: 267 },
+            { symbol: "Db", name: "Dubnium", atomicMass: 270 },
+            { symbol: "Sg", name: "Seaborgium", atomicMass: 271 },
+            { symbol: "Bh", name: "Bohrium", atomicMass: 270 },
+            { symbol: "Hs", name: "Hassium", atomicMass: 277 },
+            { symbol: "Mt", name: "Meitnérium", atomicMass: 276 },
+            { symbol: "Ds", name: "Darmstadtium", atomicMass: 281 },
+            { symbol: "Rg", name: "Roentgenium", atomicMass: 280 },
+            { symbol: "Cn", name: "Copernicium", atomicMass: 285 },
+            { symbol: "Nh", name: "Nihonium", atomicMass: 286 },
+            { symbol: "Fl", name: "Flerovium", atomicMass: 289 },
+            { symbol: "Mc", name: "Moscovium", atomicMass: 290 },
+            { symbol: "Lv", name: "Livermorium", atomicMass: 293 },
+            { symbol: "Ts", name: "Tennessine", atomicMass: 294 },
+            { symbol: "Og", name: "Oganesson", atomicMass: 294 }
+        ];
+
+        // Explanations database (normally this would be in explanations.js)
+        const explanations = {
+            intro: "La masse moléculaire (ou masse molaire) d'une substance est la somme des masses atomiques de tous les atomes qui composent sa formule chimique. Elle s'exprime en grammes par mole (g/mol).",
+            calculation: "Pour calculer la masse moléculaire :<br>1. Identifier chaque élément dans la formule<br>2. Trouver sa masse atomique<br>3. Multiplier par le nombre d'atomes<br>4. Additionner toutes les contributions",
+            example: "Exemple avec H2O :<br>- 2 atomes d'Hydrogène (H) : 2 × 1.008 g/mol = 2.016 g/mol<br>- 1 atome d'Oxygène (O) : 1 × 15.999 g/mol = 15.999 g/mol<br>Total : 2.016 + 15.999 = 18.015 g/mol",
+            importance: "La masse moléculaire est essentielle pour :<br>- Calculer les quantités de matière (moles)<br>- Préparer des solutions de concentration donnée<br>- Équilibrer des équations chimiques<br>- Prévoir les quantités dans les réactions",
+            isotopes: "Les masses atomiques ne sont pas des nombres entiers car elles tiennent compte de l'abondance naturelle des différents isotopes de chaque élément. Par exemple, le chlore (Cl) a une masse atomique de 35.45 g/mol car il existe sous forme de 35Cl (75%) et 37Cl (25%)."
+        };
+
+        // DOM Elements
+        const formulaInput = document.getElementById('formulaInput');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const inputError = document.getElementById('inputError');
+        const resultsSection = document.getElementById('resultsSection');
+        const formulaDisplay = document.getElementById('formulaDisplay');
+        const molarMassDisplay = document.getElementById('molarMassDisplay');
+        const calculationSteps = document.getElementById('calculationSteps');
+        const detailedExplanation = document.getElementById('detailedExplanation');
+        const elementsTableBody = document.getElementById('elementsTableBody');
+        const explanationToggle = document.getElementById('explanationToggle');
+        const explanationContent = document.getElementById('explanationContent');
+        const nightModeToggle = document.getElementById('nightModeToggle');
+        const infoBtn = document.getElementById('infoBtn');
+        const infoModal = document.getElementById('infoModal');
+        const closeInfoModal = document.getElementById('closeInfoModal');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate elements table
+            populateElementsTable();
+            
+            // Set up event listeners
+            calculateBtn.addEventListener('click', calculateMolarMass);
+            formulaInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') calculateMolarMass();
+            });
+            
+            explanationToggle.addEventListener('click', toggleExplanation);
+            nightModeToggle.addEventListener('click', toggleNightMode);
+            infoBtn.addEventListener('click', showInfoModal);
+            closeInfoModal.addEventListener('click', hideInfoModal);
+            
+            // Check for PWA support and register service worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    }).catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+        });
+
+        // Populate elements table
+        function populateElementsTable() {
+            elementsTableBody.innerHTML = '';
+            elements.forEach(element => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">${element.symbol}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${element.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${element.atomicMass.toFixed(3)}</td>
+                `;
+                elementsTableBody.appendChild(row);
+            });
+        }
+
+        // Parse chemical formula and calculate molar mass
+        function calculateMolarMass() {
+            const formula = formulaInput.value.trim();
+            
+            // Validate input
+            if (!formula) {
+                showError("Veuillez entrer une formule chimique");
+                return;
+            }
+            
+            // Parse formula
+            const parsedFormula = parseFormula(formula);
+            if (!parsedFormula) {
+                showError("Formule chimique invalide");
+                return;
+            }
+            
+            // Calculate molar mass
+            let totalMass = 0;
+            let stepsHTML = '';
+            let explanationHTML = `<p>${explanations.intro}</p><p>${explanations.calculation}</p>`;
+            
+            explanationHTML += `<h3 class="font-bold mt-4">Calcul pour ${formula}</h3><ul class="list-disc pl-5 mt-2">`;
+            
+            for (const element in parsedFormula) {
+                const elementData = elements.find(e => e.symbol === element);
+                if (!elementData) {
+                    showError(`Élément inconnu: ${element}`);
+                    return;
+                }
+                
+                const count = parsedFormula[element];
+                const contribution = elementData.atomicMass * count;
+                totalMass += contribution;
+                
+                stepsHTML += `
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded">
+                        <span class="font-mono">${element}${count > 1 ? `<sub>${count}</sub>` : ''}</span>
+                        <span class="text-gray-500">=</span>
+                        <span>${count} × ${elementData.atomicMass.toFixed(3)} g/mol</span>
+                        <span class="text-gray-500">=</span>
+                        <span class="font-bold">${contribution.toFixed(3)} g/mol</span>
+                    </div>
+                `;
+                
+                explanationHTML += `<li>${count} atome${count > 1 ? 's' : ''} de ${elementData.name} (${element}) : ${count} × ${elementData.atomicMass.toFixed(3)} g/mol = ${contribution.toFixed(3)} g/mol</li>`;
+            }
+            
+            // Add total step
+            stepsHTML += `
+                <div class="flex justify-between items-center bg-blue-50 p-3 rounded border border-blue-100">
+                    <span class="font-bold">Total</span>
+                    <span class="text-gray-500">=</span>
+                    <span></span>
+                    <span class="text-gray-500">=</span>
+                    <span class="font-bold text-blue-700">${totalMass.toFixed(3)} g/mol</span>
+                </div>
+            `;
+            
+            explanationHTML += `</ul><p class="mt-4 font-bold">Masse moléculaire totale : ${totalMass.toFixed(3)} g/mol</p>`;
+            explanationHTML += `<p class="mt-4">${explanations.importance}</p><p class="mt-2">${explanations.isotopes}</p>`;
+            
+            // Display results
+            formulaDisplay.textContent = formula;
+            molarMassDisplay.textContent = totalMass.toFixed(3);
+            calculationSteps.innerHTML = stepsHTML;
+            detailedExplanation.innerHTML = explanationHTML;
+            
+            // Show results section
+            resultsSection.classList.remove('hidden');
+            inputError.classList.add('hidden');
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Parse chemical formula into elements and counts
+        function parseFormula(formula) {
+            const elements = {};
+            let currentElement = '';
+            let currentCount = '';
+            let i = 0;
+            const n = formula.length;
+            
+            while (i < n) {
+                const c = formula[i];
+                
+                // Check for uppercase letter (start of new element)
+                if (c === c.toUpperCase() && c !== c.toLowerCase()) {
+                    // Save previous element if any
+                    if (currentElement) {
+                        const count = currentCount ? parseInt(currentCount) : 1;
+                        elements[currentElement] = (elements[currentElement] || 0) + count;
+                    }
+                    
+                    // Start new element
+                    currentElement = c;
+                    currentCount = '';
+                    i++;
+                    
+                    // Check for lowercase letters (element symbol continuation)
+                    while (i < n && formula[i] === formula[i].toLowerCase() && formula[i] !== formula[i].toUpperCase()) {
+                        currentElement += formula[i];
+                        i++;
+                    }
+                }
+                // Check for digits (element count)
+                else if (c >= '0' && c <= '9') {
+                    currentCount += c;
+                    i++;
+                }
+                // Ignore other characters (like parentheses for now)
+                else {
+                    i++;
+                }
+            }
+            
+            // Save the last element
+            if (currentElement) {
+                const count = currentCount ? parseInt(currentCount) : 1;
+                elements[currentElement] = (elements[currentElement] || 0) + count;
+            }
+            
+            return Object.keys(elements).length > 0 ? elements : null;
+        }
+
+        // Show error message
+        function showError(message) {
+            inputError.textContent = message;
+            inputError.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+        }
+
+        // Toggle explanation section
+        function toggleExplanation() {
+            explanationContent.classList.toggle('show');
+            const icon = explanationToggle.querySelector('i');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        // Toggle night mode
+        function toggleNightMode() {
+            document.documentElement.classList.toggle('dark');
+            const icon = nightModeToggle.querySelector('i');
+            
+            if (document.documentElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                document.body.classList.add('bg-gray-900');
+                document.body.classList.remove('bg-gray-50');
+                // Save preference
+                localStorage.setItem('nightMode', 'enabled');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                document.body.classList.remove('bg-gray-900');
+                document.body.classList.add('bg-gray-50');
+                // Save preference
+                localStorage.setItem('nightMode', 'disabled');
+            }
+        }
+
+        // Check for saved night mode preference
+        function checkNightModePreference() {
+            if (localStorage.getItem('nightMode') === 'enabled') {
+                toggleNightMode();
+            }
+        }
+
+        // Show info modal
+        function showInfoModal() {
+            infoModal.classList.remove('hidden');
+        }
+
+        // Hide info modal
+        function hideInfoModal() {
+            infoModal.classList.add('hidden');
+        }
+
+        // Service Worker (normally in service-worker.js)
+        const serviceWorkerCode = `
+            const CACHE_NAME = 'moleculaire-v1';
+            const urlsToCache = [
+                '/',
+                '/index.html',
+                '/styles.css',
+                '/script.js',
+                '/explanations.js',
+                '/elements.json',
+                '/manifest.json'
+            ];
+
+            self.addEventListener('install', event => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then(cache => cache.addAll(urlsToCache))
+                );
+            });
+
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then(response => response || fetch(event.request))
+                );
+            });
+        `;
+
+        // Manifest (normally in manifest.json)
+        const manifest = {
+            "name": "Moleculator Inc",
+            "short_name": "Moleculator Inc",
+            "description": "Calculateur de masse moléculaire pour les élèves en série D",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#3b82f6",
+            "theme_color": "#3b82f6",
+            "icons": [
+                {
+                    "src": "icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "icon-512x512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+    </script>
+    </body>
+</html>
