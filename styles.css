@@ -1,0 +1,143 @@
+:root {
+  --color-bg-light: #f8f9fa;
+  --color-bg-dark: #121212;
+  --color-text-light: #212529;
+  --color-text-dark: #eaeaea;
+  --color-primary: #007bff;
+  --color-primary-dark: #0056b3;
+  --color-card-bg: #ffffff;
+  --color-card-bg-dark: #1e1e1e;
+  --color-border: #ddd;
+  --color-border-dark: #333;
+}
+
+/* Mode sombre via classe .dark-theme */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 2rem;
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-theme {
+  background: var(--color-bg-dark);
+  color: var(--color-text-dark);
+}
+
+h1, h2 {
+  color: var(--color-primary);
+}
+
+button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+button:hover, button:focus {
+  background-color: var(--color-primary-dark);
+  outline: none;
+}
+
+input[type="text"] {
+  font-size: 1rem;
+  padding: 0.4rem;
+  margin-right: 0.5rem;
+  width: 250px;
+  max-width: 90vw;
+}
+
+.card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.dark-theme .card {
+  background-color: var(--color-card-bg-dark);
+  border-color: var(--color-border-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+#mass-result, #quiz-feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+#mol-svg text {
+  font-weight: bold;
+  fill: var(--color-primary);
+  font-size: 22px;
+  user-select: none;
+}
+
+#mol-svg circle {
+  fill: var(--color-primary);
+  opacity: 0.7;
+}
+
+#mol-3d-container {
+  width: 600px;
+  height: 400px;
+  max-width: 90vw;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  margin-top: 1rem;
+  outline: none;
+}
+
+body.dark-theme #mol-3d-container {
+  background-color: #222;
+  border-color: var(--color-border-dark);
+}
+
+/* Accessibilité */
+
+input:focus, button:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  #mol-3d-container {
+    height: 300px;
+  }
+}
+
+footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 4rem;
+}
+
+/* Toggle thème sombre (optionnel, script intégré dans main.js) */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+  z-index: 1000;
+}
+.theme-toggle:hover {
+  background-color: var(--color-primary-dark);
+	  }
+	
