@@ -9,7 +9,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="/manifest.json">
     <style>
         :root {
             --primary: #3b82f6;
@@ -56,10 +55,15 @@
             font-size: 0.8em;
         }
 
+        .formula-display sup {
+            vertical-align: super;
+            font-size: 0.8em;
+        }
+
         .atom-sphere {
             position: relative;
             width: 100%;
-            height: 200px;
+            height: 250px;
             background: #f8fafc;
             border-radius: 8px;
             overflow: hidden;
@@ -96,7 +100,7 @@
             }
             
             .atom-sphere {
-                height: 150px;
+                height: 180px;
             }
         }
 
@@ -110,6 +114,18 @@
         .exam-mode {
             animation: pulse 2s infinite;
             border: 2px solid #ef4444;
+        }
+        
+        .bond {
+            position: absolute;
+            background-color: #888;
+            transform-origin: 0 50%;
+        }
+        
+        .molecule-container {
+            position: relative;
+            height: 100%;
+            width: 100%;
         }
     </style>
 </head>
@@ -156,7 +172,7 @@
                     <div class="flex mobile-stack">
                         <input type="text" id="formulaInput" 
                                class="formula-input flex-grow px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                               placeholder="Ex: H2O, NaCl, C6H12O6, Ca(OH)2, SO4^2-..." autocomplete="off" autocapitalize="off">
+                               placeholder="Ex: H2O, NaCl, C6H12O6, Ca(OH)2, SO4^2-..." autocomplete="off" autocapitalize="off" value="H2SO4">
                         <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-r-lg transition dark:bg-blue-700 dark:hover:bg-blue-800">
                             Calculer <i class="fas fa-calculator ml-2"></i>
                         </button>
@@ -171,6 +187,8 @@
                         <button class="example-btn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded dark:bg-gray-700 dark:hover:bg-gray-600" data-formula="Ca(OH)2">Ca(OH)₂</button>
                         <button class="example-btn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded dark:bg-gray-700 dark:hover:bg-gray-600" data-formula="H2SO4">H₂SO₄</button>
                         <button class="example-btn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded dark:bg-gray-700 dark:hover:bg-gray-600" data-formula="CO2">CO₂</button>
+                        <button class="example-btn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded dark:bg-gray-700 dark:hover:bg-gray-600" data-formula="CuSO4·5H2O">CuSO₄·5H₂O</button>
+                        <button class="example-btn text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded dark:bg-gray-700 dark:hover:bg-gray-600" data-formula="NH4+">NH₄⁺</button>
                     </div>
                     
                     <p id="inputError" class="text-red-500 mt-2 text-sm hidden dark:text-red-400"></p>
@@ -178,20 +196,20 @@
             </section>
 
             <!-- Results Section -->
-            <section id="resultsSection" class="hidden bg-white rounded-lg shadow-md p-6 mb-8 dark:bg-gray-800">
+            <section id="resultsSection" class="bg-white rounded-lg shadow-md p-6 mb-8 dark:bg-gray-800">
                 <h3 class="text-xl font-semibold text-blue-700 mb-4 dark:text-blue-400">Résultats</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <!-- Formula Card -->
                     <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800/30">
                         <h4 class="font-medium text-blue-800 mb-2 dark:text-blue-300">Formule</h4>
-                        <p id="formulaDisplay" class="text-2xl font-bold text-blue-600 dark:text-blue-400 formula-display">-</p>
+                        <p id="formulaDisplay" class="text-2xl font-bold text-blue-600 dark:text-blue-400 formula-display">H₂SO₄</p>
                     </div>
                     
                     <!-- Molar Mass Card -->
                     <div class="bg-green-50 border border-green-100 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-800/30">
                         <h4 class="font-medium text-green-800 mb-2 dark:text-green-300">Masse molaire</h4>
-                        <p id="molarMassDisplay" class="text-2xl font-bold text-green-600 dark:text-green-400">-</p>
+                        <p id="molarMassDisplay" class="text-2xl font-bold text-green-600 dark:text-green-400">98.079 g/mol</p>
                     </div>
                     
                     <!-- Unit Card -->
@@ -205,16 +223,57 @@
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-700 mb-3 dark:text-gray-300">Représentation moléculaire</h4>
                     <div id="moleculeViz" class="atom-sphere">
-                        <canvas id="moleculeCanvas" class="w-full h-full"></canvas>
+                        <div class="molecule-container">
+                            <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 50%; left: 30%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                            <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                            <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                            <div class="atom" style="width: 50px; height: 50px; background-color: #909090; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 10px rgba(0,0,0,0.3);">S</div>
+                            <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 50%; left: 70%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                            <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 50%; left: 85%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                            
+                            <!-- Liaisons -->
+                            <div class="bond" style="height: 4px; width: 80px; top: 50%; left: 30%; transform: translate(0, -50%) rotate(0deg);"></div>
+                            <div class="bond" style="height: 4px; width: 60px; top: 30%; left: 50%; transform: translate(-50%, 0) rotate(90deg);"></div>
+                            <div class="bond" style="height: 4px; width: 60px; top: 70%; left: 50%; transform: translate(-50%, 0) rotate(90deg);"></div>
+                            <div class="bond" style="height: 4px; width: 60px; top: 50%; left: 50%; transform: translate(0, -50%) rotate(0deg);"></div>
+                            <div class="bond" style="height: 4px; width: 60px; top: 50%; left: 70%; transform: translate(0, -50%) rotate(0deg);"></div>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-2 text-center dark:text-gray-400">Représentation 3D simplifiée (les tailles ne sont pas à l'échelle)</p>
+                    <p class="text-sm text-gray-500 mt-2 text-center dark:text-gray-400">Représentation simplifiée de l'acide sulfurique (H₂SO₄)</p>
                 </div>
                 
                 <!-- Calculation Steps -->
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-700 mb-3 dark:text-gray-300">Détails du calcul</h4>
                     <div id="calculationSteps" class="space-y-3">
-                        <!-- Steps will be added here dynamically -->
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded dark:bg-gray-700">
+                            <span class="font-mono">H<sub>2</sub></span>
+                            <span class="text-gray-500">=</span>
+                            <span>2 × 1.008 g/mol</span>
+                            <span class="text-gray-500">=</span>
+                            <span class="font-bold">2.016 g/mol</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded dark:bg-gray-700">
+                            <span class="font-mono">S</span>
+                            <span class="text-gray-500">=</span>
+                            <span>1 × 32.060 g/mol</span>
+                            <span class="text-gray-500">=</span>
+                            <span class="font-bold">32.060 g/mol</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded dark:bg-gray-700">
+                            <span class="font-mono">O<sub>4</sub></span>
+                            <span class="text-gray-500">=</span>
+                            <span>4 × 15.999 g/mol</span>
+                            <span class="text-gray-500">=</span>
+                            <span class="font-bold">63.996 g/mol</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-blue-50 p-3 rounded border border-blue-100 dark:bg-blue-900/30 dark:border-blue-800/30">
+                            <span class="font-bold">Total</span>
+                            <span class="text-gray-500">=</span>
+                            <span></span>
+                            <span class="text-gray-500">=</span>
+                            <span class="font-bold text-blue-700 dark:text-blue-400">98.072 g/mol</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -222,7 +281,33 @@
                 <div class="mb-6">
                     <h4 class="font-semibold text-gray-700 mb-3 dark:text-gray-300">Composition massique</h4>
                     <div id="massComposition" class="space-y-3">
-                        <!-- Composition will be added here dynamically -->
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium">H - Hydrogène</span>
+                                <span>2.06%</span>
+                            </div>
+                            <div class="progress-bar bg-gray-200 dark:bg-gray-700">
+                                <div class="h-full bg-blue-500" style="width: 2.06%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium">S - Soufre</span>
+                                <span>32.69%</span>
+                            </div>
+                            <div class="progress-bar bg-gray-200 dark:bg-gray-700">
+                                <div class="h-full bg-green-500" style="width: 32.69%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span class="font-medium">O - Oxygène</span>
+                                <span>65.25%</span>
+                            </div>
+                            <div class="progress-bar bg-gray-200 dark:bg-gray-700">
+                                <div class="h-full bg-red-500" style="width: 65.25%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -232,16 +317,56 @@
                         <span>Explication détaillée</span>
                         <i class="fas fa-chevron-down transition-transform duration-300"></i>
                     </button>
-                    <div id="explanationContent" class="explanation-content">
+                    <div id="explanationContent" class="explanation-content show">
                         <div id="detailedExplanation" class="prose max-w-none text-gray-700 dark:text-gray-300">
-                            <!-- Explanation will be added here dynamically -->
+                            <h3>Calcul de la masse molaire de H₂SO₄</h3>
+                            <p>La masse moléculaire (ou masse molaire) d'une substance est la somme des masses atomiques de tous les atomes qui composent sa formule chimique. Elle s'exprime en grammes par mole (g/mol).</p>
+                            
+                            <p>Pour calculer la masse moléculaire :</p>
+                            <ol>
+                                <li>Identifier chaque élément dans la formule</li>
+                                <li>Trouver sa masse atomique</li>
+                                <li>Multiplier par le nombre d'atomes</li>
+                                <li>Additionner toutes les contributions</li>
+                            </ol>
+                            
+                            <h4>Calcul détaillé pour H₂SO₄ :</h4>
+                            <ul>
+                                <li>2 atomes d'Hydrogène (H) : 2 × 1.008 g/mol = 2.016 g/mol</li>
+                                <li>1 atome de Soufre (S) : 1 × 32.060 g/mol = 32.060 g/mol</li>
+                                <li>4 atomes d'Oxygène (O) : 4 × 15.999 g/mol = 63.996 g/mol</li>
+                            </ul>
+                            
+                            <p class="font-bold">Masse moléculaire totale : 2.016 + 32.060 + 63.996 = 98.072 g/mol</p>
+                            
+                            <h4>Composition massique :</h4>
+                            <p>La composition massique indique le pourcentage de masse de chaque élément dans un composé :</p>
+                            <ul>
+                                <li>Hydrogène : (2.016 / 98.072) × 100 = 2.06%</li>
+                                <li>Soufre : (32.060 / 98.072) × 100 = 32.69%</li>
+                                <li>Oxygène : (63.996 / 98.072) × 100 = 65.25%</li>
+                            </ul>
+                            
+                            <h4>Importance en chimie :</h4>
+                            <p>La masse moléculaire est essentielle pour :</p>
+                            <ul>
+                                <li>Calculer les quantités de matière (moles)</li>
+                                <li>Préparer des solutions de concentration donnée</li>
+                                <li>Équilibrer des équations chimiques</li>
+                                <li>Prévoir les quantités dans les réactions</li>
+                            </ul>
+                            
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
+                                <h4 class="font-bold text-blue-800 dark:text-blue-300"><i class="fas fa-lightbulb mr-2"></i>Conseil pédagogique</h4>
+                                <p>La masse atomique n'est pas un nombre entier car elle tient compte de l'abondance naturelle des différents isotopes de chaque élément. Par exemple, le chlore (Cl) a une masse atomique de 35.45 g/mol car il existe sous forme de ³⁵Cl (75%) et ³⁷Cl (25%).</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- Historique des calculs -->
-            <section id="historySection" class="hidden bg-white rounded-lg shadow-md p-6 mb-8 dark:bg-gray-800">
+            <section id="historySection" class="bg-white rounded-lg shadow-md p-6 mb-8 dark:bg-gray-800">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-blue-700 dark:text-blue-400">Historique des calculs</h3>
                     <button id="clearHistoryBtn" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
@@ -249,7 +374,42 @@
                     </button>
                 </div>
                 <div id="historyList" class="space-y-2">
-                    <!-- Historique sera ajouté ici dynamiquement -->
+                    <div class="history-item flex justify-between items-center p-3 bg-gray-100 rounded-md dark:bg-gray-700">
+                        <div class="flex items-center">
+                            <span class="font-mono mr-3">1.</span>
+                            <span class="formula-display">H<sub>2</sub>O</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-3">18.015 g/mol</span>
+                            <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-item flex justify-between items-center p-3 bg-gray-100 rounded-md dark:bg-gray-700">
+                        <div class="flex items-center">
+                            <span class="font-mono mr-3">2.</span>
+                            <span class="formula-display">NaCl</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-3">58.443 g/mol</span>
+                            <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="history-item flex justify-between items-center p-3 bg-gray-100 rounded-md dark:bg-gray-700">
+                        <div class="flex items-center">
+                            <span class="font-mono mr-3">3.</span>
+                            <span class="formula-display">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub></span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-3">180.156 g/mol</span>
+                            <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -267,7 +427,96 @@
                             </tr>
                         </thead>
                         <tbody id="elementsTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                            <!-- Elements will be added here dynamically -->
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">H</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Hydrogène</td>
+                                <td class="px-6 py-4 whitespace-nowrap">1.008</td>
+                                <td class="px-6 py-4">1s¹</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">He</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Hélium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">4.0026</td>
+                                <td class="px-6 py-4">1s²</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">C</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Carbone</td>
+                                <td class="px-6 py-4 whitespace-nowrap">12.011</td>
+                                <td class="px-6 py-4">[He] 2s² 2p²</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">N</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Azote</td>
+                                <td class="px-6 py-4 whitespace-nowrap">14.007</td>
+                                <td class="px-6 py-4">[He] 2s² 2p³</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">O</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Oxygène</td>
+                                <td class="px-6 py-4 whitespace-nowrap">15.999</td>
+                                <td class="px-6 py-4">[He] 2s² 2p⁴</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">F</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Fluor</td>
+                                <td class="px-6 py-4 whitespace-nowrap">18.998</td>
+                                <td class="px-6 py-4">[He] 2s² 2p⁵</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Na</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Sodium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">22.990</td>
+                                <td class="px-6 py-4">[Ne] 3s¹</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Mg</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Magnésium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">24.305</td>
+                                <td class="px-6 py-4">[Ne] 3s²</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Al</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Aluminium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">26.982</td>
+                                <td class="px-6 py-4">[Ne] 3s² 3p¹</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Si</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Silicium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">28.085</td>
+                                <td class="px-6 py-4">[Ne] 3s² 3p²</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">P</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Phosphore</td>
+                                <td class="px-6 py-4 whitespace-nowrap">30.974</td>
+                                <td class="px-6 py-4">[Ne] 3s² 3p³</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">S</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Soufre</td>
+                                <td class="px-6 py-4 whitespace-nowrap">32.060</td>
+                                <td class="px-6 py-4">[Ne] 3s² 3p⁴</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Cl</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Chlore</td>
+                                <td class="px-6 py-4 whitespace-nowrap">35.450</td>
+                                <td class="px-6 py-4">[Ne] 3s² 3p⁵</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">K</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Potassium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">39.098</td>
+                                <td class="px-6 py-4">[Ar] 4s¹</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">Ca</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Calcium</td>
+                                <td class="px-6 py-4 whitespace-nowrap">40.078</td>
+                                <td class="px-6 py-4">[Ar] 4s²</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -324,27 +573,26 @@
     <script>
         // Elements database with electron configurations
         const elements = [
-            { symbol: "H", name: "Hydrogène", atomicMass: 1.008, config: "1s¹", color: 0xFFAAAA, radius: 0.3 },
-            { symbol: "He", name: "Hélium", atomicMass: 4.0026, config: "1s²", color: 0xD9FFFF, radius: 0.3 },
-            { symbol: "Li", name: "Lithium", atomicMass: 6.94, config: "[He] 2s¹", color: 0xCC80FF, radius: 1.5 },
-            { symbol: "Be", name: "Béryllium", atomicMass: 9.0122, config: "[He] 2s²", color: 0xC2FF00, radius: 1.1 },
-            { symbol: "B", name: "Bore", atomicMass: 10.81, config: "[He] 2s² 2p¹", color: 0xFFB5B5, radius: 0.9 },
-            { symbol: "C", name: "Carbone", atomicMass: 12.011, config: "[He] 2s² 2p²", color: 0x909090, radius: 0.8 },
-            { symbol: "N", name: "Azote", atomicMass: 14.007, config: "[He] 2s² 2p³", color: 0x3050F8, radius: 0.7 },
-            { symbol: "O", name: "Oxygène", atomicMass: 15.999, config: "[He] 2s² 2p⁴", color: 0xFF0D0D, radius: 0.7 },
-            { symbol: "F", name: "Fluor", atomicMass: 18.998, config: "[He] 2s² 2p⁵", color: 0x90E050, radius: 0.7 },
-            { symbol: "Ne", name: "Néon", atomicMass: 20.180, config: "[He] 2s² 2p⁶", color: 0xB3E3F5, radius: 0.7 },
-            { symbol: "Na", name: "Sodium", atomicMass: 22.990, config: "[Ne] 3s¹", color: 0xAB5CF2, radius: 1.8 },
-            { symbol: "Mg", name: "Magnésium", atomicMass: 24.305, config: "[Ne] 3s²", color: 0x8AFF00, radius: 1.5 },
-            { symbol: "Al", name: "Aluminium", atomicMass: 26.982, config: "[Ne] 3s² 3p¹", color: 0xBFA6A6, radius: 1.2 },
-            { symbol: "Si", name: "Silicium", atomicMass: 28.085, config: "[Ne] 3s² 3p²", color: 0xF0C8A0, radius: 1.1 },
-            { symbol: "P", name: "Phosphore", atomicMass: 30.974, config: "[Ne] 3s² 3p³", color: 0xFF8000, radius: 1.0 },
-            { symbol: "S", name: "Soufre", atomicMass: 32.06, config: "[Ne] 3s² 3p⁴", color: 0xFFFF30, radius: 1.0 },
-            { symbol: "Cl", name: "Chlore", atomicMass: 35.45, config: "[Ne] 3s² 3p⁵", color: 0x1FF01F, radius: 1.0 },
-            { symbol: "Ar", name: "Argon", atomicMass: 39.948, config: "[Ne] 3s² 3p⁶", color: 0x80D1E3, radius: 1.0 },
-            { symbol: "K", name: "Potassium", atomicMass: 39.098, config: "[Ar] 4s¹", color: 0x8F40D4, radius: 2.2 },
-            { symbol: "Ca", name: "Calcium", atomicMass: 40.078, config: "[Ar] 4s²", color: 0x3DFF00, radius: 1.8 },
-            // ... (autres éléments avec configurations électroniques) ...
+            { symbol: "H", name: "Hydrogène", atomicMass: 1.008, config: "1s¹", color: "#FFAAAA", radius: 15 },
+            { symbol: "He", name: "Hélium", atomicMass: 4.0026, config: "1s²", color: "#D9FFFF", radius: 15 },
+            { symbol: "Li", name: "Lithium", atomicMass: 6.94, config: "[He] 2s¹", color: "#CC80FF", radius: 25 },
+            { symbol: "Be", name: "Béryllium", atomicMass: 9.0122, config: "[He] 2s²", color: "#C2FF00", radius: 20 },
+            { symbol: "B", name: "Bore", atomicMass: 10.81, config: "[He] 2s² 2p¹", color: "#FFB5B5", radius: 20 },
+            { symbol: "C", name: "Carbone", atomicMass: 12.011, config: "[He] 2s² 2p²", color: "#909090", radius: 20 },
+            { symbol: "N", name: "Azote", atomicMass: 14.007, config: "[He] 2s² 2p³", color: "#3050F8", radius: 20 },
+            { symbol: "O", name: "Oxygène", atomicMass: 15.999, config: "[He] 2s² 2p⁴", color: "#FF0D0D", radius: 20 },
+            { symbol: "F", name: "Fluor", atomicMass: 18.998, config: "[He] 2s² 2p⁵", color: "#90E050", radius: 20 },
+            { symbol: "Ne", name: "Néon", atomicMass: 20.180, config: "[He] 2s² 2p⁶", color: "#B3E3F5", radius: 20 },
+            { symbol: "Na", name: "Sodium", atomicMass: 22.990, config: "[Ne] 3s¹", color: "#AB5CF2", radius: 25 },
+            { symbol: "Mg", name: "Magnésium", atomicMass: 24.305, config: "[Ne] 3s²", color: "#8AFF00", radius: 22 },
+            { symbol: "Al", name: "Aluminium", atomicMass: 26.982, config: "[Ne] 3s² 3p¹", color: "#BFA6A6", radius: 22 },
+            { symbol: "Si", name: "Silicium", atomicMass: 28.085, config: "[Ne] 3s² 3p²", color: "#F0C8A0", radius: 20 },
+            { symbol: "P", name: "Phosphore", atomicMass: 30.974, config: "[Ne] 3s² 3p³", color: "#FF8000", radius: 20 },
+            { symbol: "S", name: "Soufre", atomicMass: 32.06, config: "[Ne] 3s² 3p⁴", color: "#FFFF30", radius: 20 },
+            { symbol: "Cl", name: "Chlore", atomicMass: 35.45, config: "[Ne] 3s² 3p⁵", color: "#1FF01F", radius: 20 },
+            { symbol: "Ar", name: "Argon", atomicMass: 39.948, config: "[Ne] 3s² 3p⁶", color: "#80D1E3", radius: 20 },
+            { symbol: "K", name: "Potassium", atomicMass: 39.098, config: "[Ar] 4s¹", color: "#8F40D4", radius: 30 },
+            { symbol: "Ca", name: "Calcium", atomicMass: 40.078, config: "[Ar] 4s²", color: "#3DFF00", radius: 25 },
         ];
 
         // Explanations database
@@ -379,11 +627,7 @@
         const historyList = document.getElementById('historyList');
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const massComposition = document.getElementById('massComposition');
-        const moleculeCanvas = document.getElementById('moleculeCanvas');
-
-        // Three.js variables
-        let scene, camera, renderer;
-        let moleculeGroup = null;
+        const moleculeViz = document.getElementById('moleculeViz');
 
         // App state
         let isExamMode = false;
@@ -391,9 +635,6 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            // Populate elements table
-            populateElementsTable();
-            
             // Set up event listeners
             calculateBtn.addEventListener('click', calculateMolarMass);
             formulaInput.addEventListener('keypress', function(e) {
@@ -406,9 +647,6 @@
             infoBtn.addEventListener('click', showInfoModal);
             closeInfoModal.addEventListener('click', hideInfoModal);
             clearHistoryBtn.addEventListener('click', clearHistory);
-            
-            // Setup 3D renderer
-            initThreeJS();
             
             // Setup example buttons
             document.querySelectorAll('.example-btn').forEach(btn => {
@@ -426,149 +664,67 @@
             
             // Check night mode preference
             checkNightModePreference();
+            
+            // Render initial molecule
+            renderMolecule2D('H2SO4');
         });
 
-        // Initialize Three.js scene
-        function initThreeJS() {
-            // Create scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf8fafc);
+        // Render a molecule in 2D (simplified)
+        function renderMolecule2D(formula) {
+            moleculeViz.innerHTML = '';
             
-            // Create camera
-            camera = new THREE.PerspectiveCamera(75, moleculeCanvas.clientWidth / moleculeCanvas.clientHeight, 0.1, 1000);
-            camera.position.z = 5;
+            const container = document.createElement('div');
+            container.className = 'molecule-container';
+            moleculeViz.appendChild(container);
             
-            // Create renderer
-            renderer = new THREE.WebGLRenderer({ canvas: moleculeCanvas, antialias: true });
-            renderer.setSize(moleculeCanvas.clientWidth, moleculeCanvas.clientHeight);
-            
-            // Add lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            // Add orbit controls if needed (would require additional library)
-            
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                if (moleculeGroup) {
-                    moleculeGroup.rotation.y += 0.005;
-                }
-                
-                renderer.render(scene, camera);
-            }
-            
-            animate();
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                camera.aspect = moleculeCanvas.clientWidth / moleculeCanvas.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(moleculeCanvas.clientWidth, moleculeCanvas.clientHeight);
-            });
-        }
-
-        // Render a molecule in 3D
-        function renderMolecule(parsedFormula) {
-            // Clear previous molecule
-            if (moleculeGroup) {
-                scene.remove(moleculeGroup);
-            }
-            
-            moleculeGroup = new THREE.Group();
-            scene.add(moleculeGroup);
-            
-            const elementsPresent = Object.keys(parsedFormula);
-            const positions = [];
-            
-            // Simple layout for common molecules
-            if (elementsPresent.length === 2) {
-                positions.push(new THREE.Vector3(-1, 0, 0));
-                if (parsedFormula[elementsPresent[1]] > 1) {
-                    const angleStep = (Math.PI * 2) / parsedFormula[elementsPresent[1]];
-                    for (let i = 0; i < parsedFormula[elementsPresent[1]]; i++) {
-                        const angle = angleStep * i;
-                        positions.push(new THREE.Vector3(
-                            1 * Math.cos(angle),
-                            1 * Math.sin(angle),
-                            0
-                        ));
-                    }
-                } else {
-                    positions.push(new THREE.Vector3(1, 0, 0));
-                }
-            } else {
-                // Default to central atom with others around
-                positions.push(new THREE.Vector3(0, 0, 0));
-                const angleStep = (Math.PI * 2) / (elementsPresent.length - 1);
-                for (let i = 1; i < elementsPresent.length; i++) {
-                    positions.push(new THREE.Vector3(
-                        1.5 * Math.cos(angleStep * i),
-                        1.5 * Math.sin(angleStep * i),
-                        0
-                    ));
-                }
-            }
-            
-            // Create atoms
-            let index = 0;
-            for (const element in parsedFormula) {
-                const elementData = elements.find(e => e.symbol === element);
-                if (!elementData) continue;
-                
-                for (let i = 0; i < parsedFormula[element]; i++) {
-                    if (index >= positions.length) continue;
-                    
-                    const geometry = new THREE.SphereGeometry(elementData.radius || 0.5, 32, 32);
-                    const material = new THREE.MeshPhongMaterial({ color: elementData.color || 0x3498db });
-                    const atom = new THREE.Mesh(geometry, material);
-                    
-                    atom.position.copy(positions[index]);
-                    moleculeGroup.add(atom);
-                    
-                    // Add label
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.width = 64;
-                    canvas.height = 64;
-                    
-                    context.fillStyle = '#ffffff';
-                    context.font = '24px Arial';
-                    context.textAlign = 'center';
-                    context.textBaseline = 'middle';
-                    context.fillText(element, 32, 32);
-                    
-                    const texture = new THREE.CanvasTexture(canvas);
-                    const labelMaterial = new THREE.SpriteMaterial({ map: texture });
-                    const label = new THREE.Sprite(labelMaterial);
-                    label.position.set(positions[index].x, positions[index].y + elementData.radius + 0.2, positions[index].z);
-                    label.scale.set(0.5, 0.5, 0.5);
-                    moleculeGroup.add(label);
-                    
-                    index++;
-                }
-            }
-        }
-
-        // Populate elements table with electron configurations
-        function populateElementsTable() {
-            elementsTableBody.innerHTML = '';
-            elements.forEach(element => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap font-mono font-bold">${element.symbol}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${element.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${element.atomicMass.toFixed(3)}</td>
-                    <td class="px-6 py-4">${element.config}</td>
+            // Simple molecule representation based on formula
+            if (formula === 'H2O') {
+                container.innerHTML = `
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 30%; left: 40%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 30%; left: 60%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 40%; left: 45%; transform: translate(-50%, -50%) rotate(30deg);"></div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 40%; left: 55%; transform: translate(-50%, -50%) rotate(-30deg);"></div>
                 `;
-                elementsTableBody.appendChild(row);
-            });
+            } else if (formula === 'CO2') {
+                container.innerHTML = `
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #909090; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">C</div>
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 50%; left: 30%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 50%; left: 70%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="bond" style="height: 4px; width: 80px; top: 50%; left: 40%; transform: translate(-50%, -50%) rotate(0deg);"></div>
+                    <div class="bond" style="height: 4px; width: 80px; top: 50%; left: 60%; transform: translate(-50%, -50%) rotate(0deg);"></div>
+                `;
+            } else if (formula === 'NH4+' || formula === 'NH4') {
+                container.innerHTML = `
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #3050F8; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">N</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 40%; left: 40%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 40%; left: 60%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 60%; left: 40%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 60%; left: 60%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="bond" style="height: 4px; width: 40px; top: 45%; left: 45%; transform: translate(-50%, -50%) rotate(45deg);"></div>
+                    <div class="bond" style="height: 4px; width: 40px; top: 45%; left: 55%; transform: translate(-50%, -50%) rotate(-45deg);"></div>
+                    <div class="bond" style="height: 4px; width: 40px; top: 55%; left: 45%; transform: translate(-50%, -50%) rotate(-45deg);"></div>
+                    <div class="bond" style="height: 4px; width: 40px; top: 55%; left: 55%; transform: translate(-50%, -50%) rotate(45deg);"></div>
+                    <div class="charge" style="position: absolute; top: 35%; left: 75%; font-weight: bold; font-size: 1.2em;">+</div>
+                `;
+            } else {
+                // Default representation for H2SO4
+                container.innerHTML = `
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 50%; left: 30%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="atom" style="width: 40px; height: 40px; background-color: #FF0D0D; border-radius: 50%; position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 8px rgba(0,0,0,0.3);">O</div>
+                    <div class="atom" style="width: 50px; height: 50px; background-color: #909090; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 10px rgba(0,0,0,0.3);">S</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 50%; left: 70%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    <div class="atom" style="width: 30px; height: 30px; background-color: #FFAAAA; border-radius: 50%; position: absolute; top: 50%; left: 85%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; box-shadow: 0 0 6px rgba(0,0,0,0.3);">H</div>
+                    
+                    <!-- Liaisons -->
+                    <div class="bond" style="height: 4px; width: 80px; top: 50%; left: 30%; transform: translate(0, -50%) rotate(0deg);"></div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 30%; left: 50%; transform: translate(-50%, 0) rotate(90deg);"></div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 70%; left: 50%; transform: translate(-50%, 0) rotate(90deg);"></div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 50%; left: 50%; transform: translate(0, -50%) rotate(0deg);"></div>
+                    <div class="bond" style="height: 4px; width: 60px; top: 50%; left: 70%; transform: translate(0, -50%) rotate(0deg);"></div>
+                `;
+            }
         }
 
         // Parse chemical formula into elements and counts (improved)
@@ -583,6 +739,18 @@
                          chargeMatch[2] === '' ? 0 : parseInt(chargeMatch[2]);
             }
             
+            // Handle hydrates
+            if (formula.includes('·')) {
+                const parts = formula.split('·');
+                const main = parseFormula(parts[0]);
+                const hydrate = parseFormula(parts[1]);
+                
+                for (const element in hydrate) {
+                    main[element] = (main[element] || 0) + hydrate[element];
+                }
+                return main;
+            }
+            
             // Convert to uppercase for easier parsing
             formula = formula.toUpperCase();
             
@@ -595,12 +763,12 @@
                 const c = formula[i];
                 
                 // Check for opening parenthesis
-                if (c === '(') {
+                if (c === '(' || c === '[' || c === '{') {
                     stack.push({});
                     i++;
                 }
                 // Check for closing parenthesis
-                else if (c === ')') {
+                else if (c === ')' || c === ']' || c === '}') {
                     i++;
                     let count = '';
                     while (i < n && formula[i] >= '0' && formula[i] <= '9') {
@@ -647,8 +815,31 @@
             return stack[0];
         }
 
-        // Format formula with subscripts
+        // Format formula with subscripts and superscripts
         function formatFormula(formula) {
+            // Handle charge
+            if (formula.includes('^')) {
+                const parts = formula.split('^');
+                const base = parts[0];
+                let charge = parts[1];
+                
+                // Format charge
+                if (charge === '+') charge = '⁺';
+                else if (charge === '-') charge = '⁻';
+                else if (charge === '2+') charge = '²⁺';
+                else if (charge === '2-') charge = '²⁻';
+                else if (charge === '3+') charge = '³⁺';
+                else if (charge === '3-') charge = '³⁻';
+                
+                return base.replace(/(\d+)/g, '<sub>$1</sub>') + '<sup>' + charge + '</sup>';
+            }
+            
+            // Handle hydrates
+            if (formula.includes('·')) {
+                const parts = formula.split('·');
+                return parts[0].replace(/(\d+)/g, '<sub>$1</sub>') + '·' + parts[1].replace(/(\d+)/g, '<sub>$1</sub>');
+            }
+            
             return formula.replace(/(\d+)/g, '<sub>$1</sub>');
         }
 
@@ -684,6 +875,7 @@
                     
                     explanationHTML += `<h3 class="font-bold mt-4">Calcul pour ${formula}</h3><ul class="list-disc pl-5 mt-2">`;
                     
+                    // First pass to calculate total mass
                     for (const element in parsedFormula) {
                         const elementData = elements.find(e => e.symbol === element);
                         if (!elementData) {
@@ -693,6 +885,14 @@
                         const count = parsedFormula[element];
                         const contribution = elementData.atomicMass * count;
                         totalMass += contribution;
+                    }
+                    
+                    // Second pass to generate steps and percentages
+                    for (const element in parsedFormula) {
+                        const elementData = elements.find(e => e.symbol === element);
+                        const count = parsedFormula[element];
+                        const contribution = elementData.atomicMass * count;
+                        const percentage = (contribution / totalMass) * 100;
                         
                         stepsHTML += `
                             <div class="flex justify-between items-center bg-gray-50 p-3 rounded dark:bg-gray-700">
@@ -706,8 +906,6 @@
                         
                         explanationHTML += `<li>${count} atome${count > 1 ? 's' : ''} de ${elementData.name} (${element}) : ${count} × ${elementData.atomicMass.toFixed(3)} g/mol = ${contribution.toFixed(3)} g/mol</li>`;
                         
-                        // Calculate mass percentage
-                        const percentage = (contribution / totalMass) * 100;
                         compositionHTML += `
                             <div class="mb-2">
                                 <div class="flex justify-between mb-1">
@@ -738,13 +936,13 @@
                     
                     // Display results
                     formulaDisplay.innerHTML = formatFormula(formula);
-                    molarMassDisplay.textContent = totalMass.toFixed(3);
+                    molarMassDisplay.textContent = totalMass.toFixed(3) + ' g/mol';
                     calculationSteps.innerHTML = stepsHTML;
                     detailedExplanation.innerHTML = explanationHTML;
                     massComposition.innerHTML = compositionHTML;
                     
-                    // Render molecule in 3D
-                    renderMolecule(parsedFormula);
+                    // Render molecule in 2D
+                    renderMolecule2D(formula);
                     
                     // Add to history
                     addToHistory(formula, totalMass);
